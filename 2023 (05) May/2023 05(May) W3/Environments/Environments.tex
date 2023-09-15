@@ -1,0 +1,192 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{url}
+\begin{document}
+\section{Continuous Mountain Car}
+The continuous mountain car task consists in driving an underpowered (gravity is stronger than the engine) car up a mountain and out of a valley. The task is successfully completed once the point on the horizontal axis that matches the top of the mountain is reached. The simplified model of the environment, presented in OpenAI's \emph{Gym} Python library \cite{Brockman2016}, will be implemented:
+
+\paragraph{Measurements:}
+
+\begin{enumerate}
+\item $p \in [p_{min} = -1.2; p_{max} = 0.6] $: position of the car on the horizontal axis.
+\item $v \in [v_{min} = -0.07; v_{max} = 0.07] $: component of the car's velocity that is parallel to the horizontal axis.
+\end{enumerate}
+
+\paragraph{Action:}
+
+\begin{enumerate}
+\item $f \in [-f_{max}; f_{max}] $: can be interpreted as the car's power, thrust, or acceleration. It has three main states: forward thrust ($f > 0$), no thrust ($f = 0$), and reverse thrust ($f < 0$). Forward thrust is considered towards the right of the track.
+\end{enumerate}
+
+The shape of the track is described by $h = sin(C_h p)$. The initial position is selected randomly (sampling from a uniform distribution) in the vicinity of the the bottom of the valley (where $C_h p \approx -\frac{\pi}{2}$). The initial velocity of the car is always zero.
+
+\paragraph{State space equations:}
+
+\begin{equation}
+\begin{aligned}
+&v_{t+1} = v_t + C_f f_t - C_g cos(C_h p_t)\\
+&p_{t+1} = p_t + v_{t+1}
+\end{aligned}
+\end{equation}
+where $C_f$ is a power coefficient that describes how the action influences the change in velocity, $C_g = 0.0025$ summarizes the effects of the force of gravity, and $C_h = 3$ describes the shape of the track.
+
+The reward for the mountain car environment is defined as -1 for every time step in which the top of the mountain isn't reached; which is achieved when $p_{t+1} = p_{max}$ for the first time. When $p_{t+1} = p_{min}$, the cars velocity is reset to $0$.
+
+\subsection{Operating Modes}
+\subsubsection{Parameter $C_f$}
+Variations in the power coefficient for fixed action bounds $[-f_{max}; f_{max}]$ result in changes to power transfer. A reduction of this coefficient could indicate engine faults, wear in the car's bearings, inadequate lubrication, among others.
+
+Maximum $C_f$ is defined as $C_{f_{max}} = \frac{C_g}{f_{max}} cos(C_h p_{max})$, which is the value for which the car's engine, at full throttle, is stronger than the force of gravity for every point of the track, rendering the task trivial.
+
+Minimum $C_f$, on the other hand, should not be too small that it makes it impossible for the car to climb the mountain at full throttle with maximum built up velocity. It's exact value is not as trivial, this is as far as I've narrowed it down:
+\begin{equation}
+C_{f_{min}} = \frac{2}{n(n+1)f_{max}}(p_{max} - p_{min} + C_g \sum_{i = 1}^n i\text{*} cos(C_h p_{t+n-i}))
+\end{equation}
+where $n$ is the number of time steps it takes the car to get from $p_{min}$ to $p_{max}$ at full throttle.
+
+The boundary value $C_{f_{min}}$ can also be determined empirically by driving the car from $p_{min}$ to $p_{max}$ at full throttle, and selecting the smallest value for which the car reaches the top of the mountain.
+
+\subsubsection{Parameter $C_h$}
+$C_h$ determines the shape of the track, regulating the steepness of the mountain. A higher value of $C_h$ results in a steeper track. The selection of $C_h$ is directly related to the boundaries of the position state variable, since $C_h p_{max} \approx \frac{\pi}{2}$ and $-\frac{3\pi}{2} < C_h p_{min} <  -\frac{\pi}{2}$.
+
+However, the relationship between $C_h$ and the coefficients $C_g$ and $C_f$ is unclear (at least for every paper I've checked), since the values $C_g = 0.0025$, $C_f = 0.001$, and $C_h = 3$ are always selected arbitrarily; therefore, I cannot properly model the variations in the steepness of the track.
+
+\subsubsection{Anomalous dynamics in measurements}\label{sec::anomalMountainCar}
+The mountain car environment can also be subject to anomalous dynamics associated with measurements. The following dynamics are considered for every measured variable: sensor noise, sensor drift, and sensor calibration fault \cite{Danesh2021}.
+
+\paragraph{Sensor noise:} Gaussian noise is added to the measurements.
+
+\paragraph{Sensor drift:} Deterministic noise values are added to the measurements. Noise will be small at the time step where the anomaly begins, and will grow linearly in amplitude as time progresses, until an upper bound is reached.
+
+\paragraph{Sensor calibration fault:} In this case, the anomaly is multiplicative, and it is modeled by multiplying the measurements by a constant value.
+
+Tables \ref{tbl::MountainCarParams} and \ref{tbl::SensorAnomalMountainCar} summarize the values of the parameters that define the different operating modes for the mountain car environment. Sensor noise is presented as a $mean(std)$ pair, and sensor drift is presented as a $k(c)$ pair; where $k$ is the slope of the ramp and $k\text{c}$ is the upper bound for the noise values. Sensor drift parameters were selected from \cite{Canonaco2020}, and the parameters for sensor noise and calibration failure were selected from \cite{Danesh2021}.
+
+
+\begin{table}[h!]
+  \caption{Parameters for the operating modes of the mountain car environment}
+  \label{tbl::MountainCarParams}
+  \begin{center}
+  \begin{tabular}{l|l|l|l|}
+      & \multicolumn{3}{c}{} \\
+  Parameter & Typical Values & Lower Bound & Upper Bound \\
+   \hline
+   $C_f$ & 0.001 & $C_{f_{min}}$ & $C_{f_{max}}$ \\
+   \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+\begin{table}[h!]
+  \caption{Parameters for the sensor-related operating modes of the mountain car environment}
+  \label{tbl::SensorAnomalMountainCar}
+  \begin{center}
+  \begin{tabular}{l|l|l|l|}
+      & \multicolumn{3}{c}{} \\
+  Environment & Sensor noise & Calibration failure & Sensor drift \\
+   \hline
+   Mountain Car & 1(2)& 3 & 0.2(10) \\
+   \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+%\paragraph{Parameter C_h}
+%
+%Parameter $C_h$ determines the shape of the track, regulating the steepness of the mountain. A higher value of $C_h$ results in a steeper track. The selection of $C_h$ is directly related to the boundaries of the position state variable, since $C_h p_{max} \approx {\pi}{2}$ and $-{3\pi}{2} < C_h p_{min} <  -{\pi}{2}$.
+%
+%Minimum $C_h$ is $C_{h_{min}} = 0$, which would make the track flat; while maximum $C_h$ is virtually boundless, as long as a big enough potency is selected.
+
+\section{Cart Pole}
+The inverted pendulum on a cart, or cart-pole problem, consists in balancing an unstable pole connected to a cart, by moving the cart (and the pole's pivot point) horizontally. The task is failed if the pole falls under a certain angle or the cart moves out of its horizontal boundaries. The non-friction model presented in \cite{Florian2007} will be implemented. This is also the implementation presented in OpenAI's \emph{Gym} Python library \cite{Brockman2016}:
+
+\paragraph{Measurements:}
+
+\begin{enumerate}
+\item $x \in [x_{min}; x_{max}] $: position of the cart on the horizontal axis.
+\item $\dot{x} \in \Re $: velocity of the cart on the horizontal axis.
+\item $\theta \in [\theta_{min}; \theta_{max}]$ : angle of the pole.
+\item $\dot{\theta} \in \Re$: angular velocity of the pole.
+\end{enumerate}
+
+\paragraph{Action:}
+
+\begin{enumerate}
+\item $f \in [-f_{max}; f_{max}] $: the force applied to the cart to move it. A positive value is considered to be pushing right.
+\end{enumerate}
+
+All initial observation variables are assigned a uniform random value in $[-0.05; 0.05]$.
+
+\paragraph{State space equations:}
+
+\begin{equation}
+\begin{aligned}
+&\ddot{\theta}_t = \frac{g sin\theta_t + cos\theta_t (\frac{-f_t - m_p l \dot{\theta}^2sin\theta_t}{m_c + m_p})}{l(\frac{4}{3} - \frac{m_p cos^2\theta_t}{m_c + m_p})}\\
+&\ddot{x}_t = \frac{f_t + m_p l (\dot{\theta_t}^2sin\theta_t - \ddot{\theta}_t cos\theta_t)}{m_c + m_p}\\
+&\dot{x}_{t+1} = \dot{x_t} + \ddot{x}_t \Delta t\\
+&x_{t+1} = x_t + \dot{x}_t \Delta t\\
+&\dot{\theta}_{t+1} = \dot{\theta_t} + \ddot{\theta}_t \Delta t\\
+&\theta_{t+1} = \theta_t + \dot{\theta}_t \Delta t\\
+\end{aligned}
+\end{equation}
+where $g = 9.8$ is the acceleration of gravity; $m_p$ and $m_c$ are the mass of the pole and the cart respectively; $2l$ is the length of the pole; and $\Delta t$ is the sampling period, or the time between two time steps. The state variables $\ddot{\theta}$ and $\ddot{x}$ are the angular acceleration of the pole, and the acceleration of the cart, respectively, which are not measured.
+
+The reward of the cart-pole task is defined as $+1$ for every time step, including the failure step.
+
+\subsection{Operating Modes}
+
+\subsubsection{Adding friction}
+The previous model can be modified to consider friction between the cart and the track ($\mu_c$) and friction in the joint between the pole and the cart ($\mu_p$).
+The state equations for $\ddot{\theta}$ and $\ddot{x}$ are modified as follows:
+\begin{equation}
+\begin{aligned}
+&{N_c}_t = (m_c + m_p)g - m_p l (\ddot{\theta}_t sin\theta_t + \dot{\theta}_t^2cos\theta_t)\\
+&\ddot{\theta}_t = \frac{g sin\theta_t + cos\theta_t\{\frac{-f_t - m_p l \dot{\theta}^2[sin\theta_t + \mu_c sgn({N_c}_t \dot{x})cos\theta_t]}{m_c + m_p} + \mu_c g sgn({N_c}_t \dot{x})\} - \frac{\mu_p \dot{\theta}_t}{m_p l}}{l\{\frac{4}{3} - \frac{m_pcos\theta_t}{m_c + m_p}[cos\theta_t - \mu_c sgn({N_c}_t \dot{x})]\}}\\
+&\ddot{x}_t = \frac{f_t + m_p l (\dot{\theta_t}^2sin\theta_t - \ddot{\theta}_t cos\theta_t) - \mu_c {N_c}_tsgn({N_c}_t \dot{x})}
+{m_c + m_p}\\
+\end{aligned}
+\end{equation}
+where $\mu_p \dot{\theta}$ is the torque associated with the friction in the joint between the cart and the pole. $N_c$ is the magnitude of the force normal to the track, and, for common choice of parameters, it will always be positive, as the cart should not try to jump off the track.
+
+Minimum values for $\mu_p$ and $\mu_c$ are 0, for the cases with no friction. The maximum value for $\mu_c$ is be selected as $0.8$, following the worst case scenario in \cite{Manrique2020}. The maximum value for $\mu_c$ is selected as $0.01$ according to its typical values.
+
+\subsubsection{Anomalous dynamics in measurements}
+The cart-pole environment can also present corruption in measurements with the characteristics described in section \ref{sec::anomalMountainCar}. The parameter values selected for the operating modes related to measurement corruption are the same as the ones selected for the mountain car environment due to the fact that similar variables are measured.
+
+Tables \ref{tbl::CartpoleParams} and \ref{tbl::SensorAnomalCartPole} summarize the values of the parameters that define the different operating modes for the cart-pole environment. 
+
+\begin{table}[h]
+  \caption{Parameters for the operating modes of the cart-pole environment}
+  \label{tbl::CartpoleParams}
+  \begin{center}
+  \begin{tabular}{l|l|l|l|}
+      & \multicolumn{3}{c}{} \\
+  Parameter & Typical Values & Lower Bound & Upper Bound \\
+   \hline
+   $\mu_c$ & \{0.0005, 0.01, 0.05\}  & 0 & 0.8 \\
+   $\mu_p$ & \{0.000002, 0.001\} & 0 & 0.01 \\
+   \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+\begin{table}[h]
+  \caption{Parameters for the sensor-related operating modes of the cart-pole environment}
+  \label{tbl::SensorAnomalCartPole}
+  \begin{center}
+  \begin{tabular}{l|l|l|l|}
+      & \multicolumn{3}{c}{} \\
+  Environment & Sensor noise & Calibration failure & Sensor drift \\
+   \hline
+   Cart-pole & 1(2)& 3 & 0.2(10) \\
+   \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+
+
+\bibliographystyle{vancouver}
+\bibliography{FaultTolerantControl.bib}
+\end{document} 

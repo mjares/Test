@@ -1,0 +1,60 @@
+This is BibTeX, Version 0.99d
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: Environments.aux
+Reallocating 'name_of_file' (item size: 1) to 10 items.
+The style file: vancouver.bst
+Reallocating 'name_of_file' (item size: 1) to 25 items.
+Reallocating 'glb_str_end' (item size: 4) to 20 items.
+Reallocating 'glb_str_ptr' (item size: 4) to 20 items.
+Reallocating 'global_strs' (item size: 1) to 4000000 items.
+Reallocating 'wiz_functions' (item size: 4) to 6000 items.
+Database file #1: FaultTolerantControl.bib
+`journal' is a missing field, not a string, for entry Florian2007
+while executing---line 1983 of file vancouver.bst
+Warning--empty journal in Florian2007
+Warning--there's a number but no volume in Manrique2020
+Warning--empty pages in Danesh2021
+Warning--empty author and editor in Canonaco2020
+Warning--missing publisher in Canonaco2020
+You've used 5 entries,
+            3507 wiz_defined-function locations,
+            720 strings with 5778 characters,
+and the built_in function-call counts, 7145 in all, are:
+= -- 834
+> -- 68
+< -- 8
++ -- 32
+- -- 16
+* -- 588
+:= -- 809
+add.period$ -- 14
+call.type$ -- 5
+change.case$ -- 2
+chr.to.int$ -- 20
+cite$ -- 10
+duplicate$ -- 540
+empty$ -- 701
+format.name$ -- 20
+if$ -- 1660
+int.to.chr$ -- 0
+int.to.str$ -- 5
+missing$ -- 42
+newline$ -- 25
+num.names$ -- 5
+pop$ -- 100
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 93
+stack$ -- 0
+substring$ -- 1358
+swap$ -- 91
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 5
+while$ -- 37
+width$ -- 6
+write$ -- 49
+(There was 1 error message)

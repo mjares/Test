@@ -1,0 +1,30 @@
+\begin{thebibliography}{1}
+
+\bibitem{Brockman2016}
+Brockman G, Cheung V, Pettersson L, Schneider J, Schulman J, Tang J, et~al.
+\newblock {OpenAI Gym}; 2016.
+
+\bibitem{Florian2007}
+Florian V.
+\newblock {Correct equations for the dynamics of the cart-pole system}. 2007.
+\newblock Available from:
+  \url{https://coneural.org/florian/papers/05_cart_pole.pdf}.
+
+\bibitem{Manrique2020}
+{Manrique Escobar} CA, Pappalardo CM, Guida D.
+\newblock {A Parametric Study of a Deep Reinforcement Learning Control System
+  Applied to the Swing-Up Problem of the Cart-Pole}.
+\newblock Applied Sciences. 2020;(10):9013.
+
+\bibitem{Danesh2021}
+Danesh MH, Fern A.
+\newblock {Out-of-Distribution Dynamics Detection: RL-Relevant Benchmarks and
+  Results}.
+\newblock In: ICML 2021 Workshop on Uncertainty and Robustness in Deep
+  Learning; 2021. .
+
+\bibitem{Canonaco2020}
+Canonaco G, Restelli M, Roveri M. {Model-Free Non-Stationarity Detection and
+  Adaptation in Reinforcement Learning}; 2020.
+
+\end{thebibliography}
